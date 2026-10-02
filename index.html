@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OmniHealth Portal</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+
+  <!-- Top Navigation -->
+  <header class="top-nav no-print">
+    <div class="nav-content">
+      <div class="nav-brand">✦ OmniHealth Portal</div>
+      
+      <select id="global-company" class="company-dropdown" onchange="changeCompany()">
+        <option value="Mabuhay GazSavers Inc.">Mabuhay GazSavers Inc.</option>
+        <option value="LBAP METALSCORP Main">LBAP METALSCORP Main</option>
+        <option value="LBAP METALS CORP Annex">LBAP METALS CORP Annex</option>
+        <option value="ECOSAVERS HUB Inc">ECOSAVERS HUB Inc</option>
+        <option value="RMM LEISURES VENTURES CORP">RMM LEISURES VENTURES CORP</option>
+      </select>
+
+      <div class="nav-links">
+        <button onclick="navigate('home')" class="nav-link active" id="nav-home">Overview</button>
+        <button onclick="navigate('master')" class="nav-link" id="nav-master">Master list</button>
+        <button onclick="navigate('individual')" class="nav-link" id="nav-individual">Patient record</button>
+        <button onclick="navigate('medications')" class="nav-link" id="nav-medications">Medications</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    
+    <!-- 1. LANDING PAGE OVERVIEW -->
+    <section id="view-home" class="view-section active no-print">
+      <p class="subtitle">MULTI-COMPANY OCCUPATIONAL HEALTH</p>
+      <h1 class="main-title" id="welcome-title">Care, clearly organized.</h1>
+      <p class="description">Select a company from the top menu to view its specific employee master list, patient records, and medication inventory.</p>
+      <div class="cards-grid">
+        <div class="portal-card">
+          <div class="icon">≡</div>
+          <h2>Master list portal</h2>
+          <p>Browse the patient index for the selected company and export the full list as a PDF.</p>
+          <button class="btn-outline" onclick="navigate('master')">Go to master list →</button>
+        </div>
+        <div class="portal-card">
+          <div class="icon">▤</div>
+          <h2>Individual patient portal</h2>
+          <p>Add new records or view specific employee medical histories. Saves instantly to the Master List.</p>
+          <button class="btn-solid" onclick="clearFormAndNavigate()">Add New Record →</button>
+        </div>
+        <div class="portal-card" style="grid-column: span 2;">
+          <div class="icon">💊</div>
+          <h2>Medication Management</h2>
+          <p>Track clinic medicine inventory, log expiry dates, and record medication issuance to employees.</p>
+          <button class="btn-outline" onclick="navigate('medications')">Manage Medications →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. MASTER LIST PORTAL -->
+    <section id="view-master" class="view-section">
+      <div class="header-action no-print" style="display: flex; flex-wrap: wrap; gap: 15px; align-items: center;">
+        <h2 id="master-list-title" style="margin: 0;">Employee Master List</h2>
+        
+        <!-- NEW: Search Patient Feature -->
+        <div class="search-section" style="margin-right: auto; display: flex; gap: 10px;">
+          <input type="text" id="patientSearchInput" placeholder="Search ID or Name..." style="padding: 8px; width: 220px; border: 1px solid var(--border); border-radius: 4px; font-size: 13px;">
+          <button onclick="searchPatient()" class="btn-outline">Search</button>
+        </div>
+
+        <div>
+          <button class="btn-solid" onclick="clearFormAndNavigate()">+ Add New Record</button>
+          <button class="btn-outline" onclick="downloadMasterListPDF()">Download Master List PDF</button>
+        </div>
+      </div>
+      
+      <div id="master-pdf-container" class="table-container">
+        <div class="print-only doc-header">
+          <div class="header-text">
+            <h2 style="font-size: 18px; margin-bottom: 5px;">OmniHealth Portal</h2>
+            <h1 class="company-name print-company-name">Company Name</h1>
+            <h2 class="doc-title" style="margin-top: 15px;">EMPLOYEE MEDICAL MASTER LIST</h2>
+          </div>
+        </div>
+        <table class="master-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Department</th>
+              <th>Blood Type</th>
+              <th>Contact</th>
+              <th class="no-print">Action</th>
+            </tr>
+          </thead>
+          <tbody id="master-tbody">
+            <!-- Populated by JS -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 3. INDIVIDUAL PATIENT PORTAL -->
+    <section id="view-individual" class="view-section">
+      <div class="header-action no-print" style="display: flex; flex-wrap: wrap; gap: 10px;">
+        <h2>Patient Record</h2>
+        <div style="display: flex; gap: 10px; margin-left: auto;">
+          <button class="btn-solid" onclick="savePatientRecord()">Save Record to Master List</button>
+          
+          <!-- NEW: Delete Record Feature -->
+          <button class="btn-solid" onclick="deleteRecord()" style="background-color: #dc3545; border-color: #dc3545;">Delete Record</button>
+          
+          <button class="btn-outline" onclick="downloadIndividualPDF()">Download Patient PDF</button>
+        </div>
+      </div>
+
+      <!-- WEB VIEW FOR DATA ENTRY -->
+      <div id="individual-web-container" class="document-wrapper">
+        <div class="doc-header">
+          <div class="header-text">
+            <h1 class="company-name" id="doc-company-name">Mabuhay GazSavers Inc.</h1>
+            <p id="doc-company-address" style="font-size:12px; color:var(--text-muted); margin-top:4px;">BARANGAY SAN JOAQUIN, SANTO TOMAS, BATANGAS<br>(043) 784 4960</p>
+            <h2 class="doc-title">PATIENT INFORMATION SHEET & MONITORING LOG</h2>
+          </div>
+        </div>
+
+        <form id="patient-form">
+          <input type="hidden" id="recordId">
+          <input type="hidden" id="company">
+
+          <fieldset>
+            <legend>Patient Information</legend>
+            <div class="grid-4">
+              <div><label>Date of Visitation</label><input type="date" id="visitDate"></div>
+              <div><label>Employee ID</label><input type="text" id="empId"></div>
+              <div><label>Company</label><input type="text" id="companyDisplay" readonly class="readonly-input"></div>
+              <div><label>Attending Nurse</label><input type="text" id="attendingNurse" placeholder="e.g. Jane Doe, RN"></div>
+            </div>
+            <div class="grid-4">
+              <div><label>Last Name</label><input type="text" id="lName"></div>
+              <div><label>First Name</label><input type="text" id="fName"></div>
+              <div><label>Middle Name</label><input type="text" id="mName"></div>
+              <div><label>Suffix</label><input type="text" id="suffix"></div>
+            </div>
+            <div class="grid-5">
+              <div><label>Date of Birth</label><input type="date" id="dob"></div>
+              <div><label>Age (Auto)</label><input type="number" id="age" readonly class="readonly-input"></div>
+              <div><label>Sex</label><input type="text" id="sex"></div>
+              <div><label>Civil Status</label><input type="text" id="civilStatus"></div>
+              <div><label>Contact Number</label><input type="text" id="contact"></div>
+            </div>
+            <div class="grid-2">
+              <div><label>Address</label><input type="text" id="address"></div>
+              <div><label>Email</label><input type="email" id="email"></div>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Employment Information</legend>
+            <div class="grid-3">
+              <div><label>Department</label><input type="text" id="department"></div>
+              <div><label>Date Hired</label><input type="text" id="dateHired"></div>
+              <div><label>Job Title</label><input type="text" id="jobTitle"></div>
+            </div>
+            <div class="radio-group" style="margin-top:10px;">
+              <label>Employment Type:</label>
+              <label><input type="radio" name="empType" value="Regular"> Regular</label>
+              <label><input type="radio" name="empType" value="Contractual"> Contractual</label>
+              <label><input type="radio" name="empType" value="Probationary"> Probationary</label>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Insurance & Emergency Details</legend>
+            <div class="grid-4">
+              <div><label>Health Insurance Provider</label><input type="text" id="insuranceProv"></div>
+              <div><label>PhilHealth No.</label><input type="text" id="philhealth"></div>
+              <div><label>Policy/ID Number</label><input type="text" id="policyId"></div>
+              <div><label>Coverage/Plan Type</label><input type="text" id="coverage"></div>
+            </div>
+            <div class="grid-3">
+              <div><label>Emergency Contact Person</label><input type="text" id="emergName"></div>
+              <div><label>Relationship</label><input type="text" id="emergRel"></div>
+              <div><label>Emergency Contact Number</label><input type="text" id="emergNum"></div>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Vital Signs</legend>
+            <div class="grid-4">
+              <div><label>Blood Pressure</label><input type="text" id="bp" placeholder="120/80"></div>
+              <div><label>Heart Rate</label><input type="text" id="hr" placeholder="bpm"></div>
+              <div><label>Resp Rate</label><input type="text" id="resp" placeholder="cpm"></div>
+              <div><label>O2 Saturation</label><input type="text" id="o2" placeholder="%"></div>
+            </div>
+            <div class="grid-4">
+              <div><label>Temperature</label><input type="text" id="temp" placeholder="°C"></div>
+              <div><label>Height (cm)</label><input type="number" id="height"></div>
+              <div><label>Weight (kg)</label><input type="number" id="weight"></div>
+              <div><label>BMI (Auto)</label><input type="text" id="bmi" readonly class="readonly-input"></div>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Medical & Health History</legend>
+            <div class="grid-3">
+              <div><label>Vaccination</label><input type="text" id="vaxStatus"></div>
+              <div><label>Blood Type</label><input type="text" id="bloodType"></div>
+              <div><label>Allergies</label><input type="text" id="allergies"></div>
+            </div>
+            <div class="grid-3">
+              <div><label>Chronic Illnesses</label><textarea id="chronic" rows="1"></textarea></div>
+              <div><label>Current Medications</label><textarea id="medications" rows="1"></textarea></div>
+              <div><label>Previous Surgeries</label><textarea id="surgeries" rows="1"></textarea></div>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Lifestyle & Health Monitoring</legend>
+            <div class="grid-4">
+              <div><label>Smoker</label><input type="text" id="smoker"></div>
+              <div><label>Alcohol</label><input type="text" id="alcohol"></div>
+              <div><label>Exercise</label><input type="text" id="exercise"></div>
+              <div><label>Last Annual Physical Exam</label><input type="date" id="lastApe"></div>
+            </div>
+            <div class="grid-2">
+              <div><label>Recent Health Concerns</label><input type="text" id="concerns"></div>
+              <div><label>Last Lab Test</label><input type="text" id="lastLab"></div>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Patient Monitoring Log</legend>
+            <div class="no-print log-form-area">
+              <p style="font-size: 12px; margin-bottom: 8px; font-weight: bold;">Add New Vitals Entry:</p>
+              
+              <div class="grid-5" style="align-items: end;">
+                <div><label>Date</label><input type="date" id="logDate"></div>
+                <div><label>BP (mmHg)</label><input type="text" id="logBP" placeholder="120/80"></div>
+                <div><label>Heart Rate</label><input type="number" id="logHR" placeholder="bpm"></div>
+                <div><label>Resp Rate</label><input type="number" id="logResp" placeholder="cpm"></div>
+                <div><label>O2 Sat (%)</label><input type="number" id="logO2" placeholder="%"></div>
+              </div>
+              
+              <div class="grid-4" style="align-items: end; margin-top:8px;">
+                <div><label>Temp (°C)</label><input type="number" id="logTemp" step="0.1"></div>
+                <div><label>Glucose</label><input type="number" id="logGlucose" placeholder="mg/dL"></div>
+                <div><label>Weight (kg)</label><input type="number" id="logWeight" step="0.1"></div>
+                <div><label>Notes / Assessment</label><input type="text" id="logNotes"></div>
+              </div>
+
+              <div style="margin-top: 10px; text-align: right;">
+                <button type="button" class="btn-solid" onclick="addMonitoringLog()">+ Add to Log</button>
+              </div>
+            </div>
+
+            <div class="table-container" style="box-shadow: none; border: 1px solid var(--border); margin-top: 15px; overflow-x: auto;">
+              <table class="master-table log-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>BP</th>
+                    <th>HR</th>
+                    <th>Resp</th>
+                    <th>SpO2</th>
+                    <th>Temp</th>
+                    <th>Glucose</th>
+                    <th>Wt</th>
+                    <th>Notes</th>
+                    <th class="no-print">Act</th>
+                  </tr>
+                </thead>
+                <tbody id="log-tbody">
+                  <!-- Dynamically populated per patient -->
+                </tbody>
+              </table>
+            </div>
+          </fieldset>
+
+          <div class="consent-block">
+            <p>I hereby declare that the information I have provided in this form is true, complete, and correct to the best of my knowledge. I understand that any false, misleading, or incomplete information may affect my medical care, insurance processing, or company health services. I authorize the Company Clinic and its medical personnel to collect, use, and process my personal and health information for purposes of health monitoring, medical assistance, insurance documentation, and emergency response. I understand that my records will be kept confidential in accordance with the Data Privacy Act of 2012 (RA 10173) and used only for legitimate occupational health purposes.</p>
+            <div class="signature-line">
+              <div class="sig-box"><div class="line"></div><label>Name of patient & Signature</label></div>
+              <div class="sig-box"><div class="line"></div><label>Date</label></div>
+            </div>
+          </div>
+        </form>
+      </div>
+      
+      <!-- ==========================================
+           HIDDEN PRINT TEMPLATE (PROFESSIONAL LEGAL SIZE)
+           ========================================== -->
+      <div id="hidden-print-template" style="display: none; background: white; padding: 0; color: #222; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 11px; line-height: 1.5; width: 100%; box-sizing: border-box;">
+        
+        <div style="text-align: center; margin-bottom: 25px; border-bottom: 3px solid #2a4d2e; padding-bottom: 15px;">
+          <h2 style="margin: 0; font-size: 24px; font-weight: 800; color: #2a4d2e; text-transform: uppercase; letter-spacing: 1px;">OmniHealth Portal</h2>
+          <h3 id="pt-header-company" style="margin: 5px 0 10px 0; font-size: 16px; color: #17253d; font-weight: 700;"></h3>
+          <h4 style="margin: 0; font-size: 13px; font-weight: bold; color: #555; text-decoration: none; text-transform: uppercase;">Patient Information Sheet & Monitoring Log</h4>
+          <p style="margin: 8px 0 0 0; font-size: 11px; color: #555;">Date of Visitation: <strong style="color:#000;"><span id="pt-visitDate"></span></strong></p>
+        </div>
+
+        <div style="background: #f4f7f6; border-left: 4px solid #2a4d2e; font-weight: bold; padding: 6px 10px; margin-bottom: 10px; color: #2a4d2e; text-transform: uppercase; font-size: 12px;">Patient Information</div>
+        <div style="display: flex; flex-wrap: wrap; margin-bottom: 5px;">
+          <div style="flex: 1 1 100%; margin-bottom: 6px;"><strong>Full Name:</strong> <span id="pt-fullName" style="color: #000;"></span></div>
+          <div style="flex: 1 1 33%; margin-bottom: 6px;"><strong>DOB:</strong> <span id="pt-dob" style="color: #000;"></span></div>
+          <div style="flex: 1 1 33%; margin-bottom: 6px;"><strong>Age:</strong> <span id="pt-age" style="color: #000;"></span></div>
+          <div style="flex: 1 1 33%; margin-bottom: 6px;"><strong>Sex:</strong> <span id="pt-sex" style="color: #000;"></span></div>
+          <div style="flex: 1 1 50%; margin-bottom: 6px;"><strong>Civil Status:</strong> <span id="pt-civil" style="color: #000;"></span></div>
+          <div style="flex: 1 1 50%; margin-bottom: 6px;"><strong>Employee ID:</strong> <span id="pt-empId" style="color: #000;"></span></div>
+          <div style="flex: 1 1 50%; margin-bottom: 6px;"><strong>Contact:</strong> <span id="pt-contact" style="color: #000;"></span></div>
+          <div style="flex: 1 1 50%; margin-bottom: 6px;"><strong>Company:</strong> <span id="pt-company" style="color: #000;"></span></div>
+          <div style="flex: 1 1 100%; margin-bottom: 6px;"><strong>Address:</strong> <span id="pt-address" style="color: #000;"></span></div>
+          <div style="flex: 1 1 50%; margin-bottom: 6px;"><strong>Job Title:</strong> <span id="pt-jobTitle" style="color: #000;"></span></div>
+          <div style="flex: 1 1 50%; margin-bottom: 6px;"><strong>Email:</strong> <span id="pt-email" style="color: #000;"></span></div>
+        </div>
+
+        <div style="background: #f4f7f6; border-left: 4px solid #2a4d2e; font-weight: bold; padding: 6px 10px; margin-bottom: 10px; margin-top: 15px; color: #2a4d2e; text-transform: uppercase; font-size: 12px;">Employment & Insurance</div>
+        <div style="display: flex; flex-wrap: wrap; margin-bottom: 5px;">
+          <div style="flex: 1 1 33%; margin-bottom: 6px;"><strong>Department:</strong> <span id="pt-department" style="color: #000;"></span></div>
+          <div style="flex: 1 1 33%; margin-bottom: 6px;"><strong>Date Hired:</strong> <span id="pt-dateHired" style="color: #000;"></span></div>
+          <div style="flex: 1 1 33%; margin-bottom: 6px;"><strong>Type:</strong> <span id="pt-empType" style="color: #000;"></span></div>
+          <div style="flex: 1 1 50%; margin-bottom: 6px;"><strong>PhilHealth No:</strong> <span id="pt-philhealth" style="color: #000;"></span></div>
+          <div style="flex: 1 1 50%; margin-bottom: 6px;"><strong>Health Insurance:</strong> <span id="pt-insuranceProv" style="color: #000;"></span></div>
+          <div style="flex: 1 1 50%; margin-bottom: 6px;"><strong>Policy No:</strong> <span id="pt-policyId" style="color: #000;"></span></div>
+          <div style="flex: 1 1 50%; margin-bottom: 6px;"><strong>Coverage:</strong> <span id="pt-coverage" style="color: #000;"></span></div>
+          <div style="flex: 1 1 100%; margin-bottom: 6px;"><strong>Emergency Contact:</strong> <span id="pt-emergName" style="color: #000;"></span> (<span id="pt-emergRel" style="color: #000;"></span>) - <span id="pt-emergNum" style="color: #000;"></span></div>
+        </div>
+
+        <div style="background: #f4f7f6; border-left: 4px solid #2a4d2e; font-weight: bold; padding: 6px 10px; margin-bottom: 10px; margin-top: 15px; color: #2a4d2e; text-transform: uppercase; font-size: 12px;">Vital Signs</div>
+        <div style="display: flex; flex-wrap: wrap; margin-bottom: 5px;">
+          <div style="flex: 1 1 25%; margin-bottom: 6px;"><strong>BP:</strong> <span id="pt-bp" style="color: #000;"></span></div>
+          <div style="flex: 1 1 25%; margin-bottom: 6px;"><strong>HR:</strong> <span id="pt-hr" style="color: #000;"></span></div>
+          <div style="flex: 1 1 25%; margin-bottom: 6px;"><strong>Resp:</strong> <span id="pt-resp" style="color: #000;"></span></div>
+          <div style="flex: 1 1 25%; margin-bottom: 6px;"><strong>O2 Sat:</strong> <span id="pt-o2" style="color: #000;"></span></div>
+          <div style="flex: 1 1 25%; margin-bottom: 6px;"><strong>Temp:</strong> <span id="pt-temp" style="color: #000;"></span></div>
+          <div style="flex: 1 1 25%; margin-bottom: 6px;"><strong>Height:</strong> <span id="pt-height" style="color: #000;"></span> cm</div>
+          <div style="flex: 1 1 25%; margin-bottom: 6px;"><strong>Weight:</strong> <span id="pt-weight" style="color: #000;"></span> kg</div>
+          <div style="flex: 1 1 25%; margin-bottom: 6px;"><strong>BMI:</strong> <span id="pt-bmi" style="color: #000;"></span></div>
+        </div>
+
+        <div style="background: #f4f7f6; border-left: 4px solid #2a4d2e; font-weight: bold; padding: 6px 10px; margin-bottom: 10px; margin-top: 15px; color: #2a4d2e; text-transform: uppercase; font-size: 12px;">Medical History & Lifestyle</div>
+        <div style="display: flex; flex-wrap: wrap; margin-bottom: 5px;">
+          <div style="flex: 1 1 50%; margin-bottom: 6px;"><strong>Blood Type:</strong> <span id="pt-bloodType" style="color: #000;"></span></div>
+          <div style="flex: 1 1 50%; margin-bottom: 6px;"><strong>Vaccination:</strong> <span id="pt-vaxStatus" style="color: #000;"></span></div>
+          <div style="flex: 1 1 50%; margin-bottom: 6px;"><strong>Allergies:</strong> <span id="pt-allergies" style="color: #000;"></span></div>
+          <div style="flex: 1 1 50%; margin-bottom: 6px;"><strong>Chronic Illnesses:</strong> <span id="pt-chronic" style="color: #000;"></span></div>
+          <div style="flex: 1 1 50%; margin-bottom: 6px;"><strong>Current Meds:</strong> <span id="pt-medications" style="color: #000;"></span></div>
+          <div style="flex: 1 1 50%; margin-bottom: 6px;"><strong>Prev Surgeries:</strong> <span id="pt-surgeries" style="color: #000;"></span></div>
+          <div style="flex: 1 1 33%; margin-bottom: 6px;"><strong>Smoker:</strong> <span id="pt-smoker" style="color: #000;"></span></div>
+          <div style="flex: 1 1 33%; margin-bottom: 6px;"><strong>Alcohol:</strong> <span id="pt-alcohol" style="color: #000;"></span></div>
+          <div style="flex: 1 1 33%; margin-bottom: 6px;"><strong>Exercise:</strong> <span id="pt-exercise" style="color: #000;"></span></div>
+          <div style="flex: 1 1 33%; margin-bottom: 6px;"><strong>Last APE:</strong> <span id="pt-lastApe" style="color: #000;"></span></div>
+          <div style="flex: 1 1 33%; margin-bottom: 6px;"><strong>Last Lab:</strong> <span id="pt-lastLab" style="color: #000;"></span></div>
+          <div style="flex: 1 1 33%; margin-bottom: 6px;"><strong>Recent Concerns:</strong> <span id="pt-concerns" style="color: #000;"></span></div>
+        </div>
+
+        <div style="background: #f4f7f6; border-left: 4px solid #2a4d2e; font-weight: bold; padding: 6px 10px; margin-bottom: 10px; margin-top: 15px; color: #2a4d2e; text-transform: uppercase; font-size: 12px;">Patient Monitoring Log</div>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px; font-size: 10px;">
+          <thead>
+            <tr>
+              <th style="border-bottom: 2px solid #2a4d2e; padding: 6px; text-align: left; background: #fff; color: #17253d;">Date</th>
+              <th style="border-bottom: 2px solid #2a4d2e; padding: 6px; text-align: left; background: #fff; color: #17253d;">BP</th>
+              <th style="border-bottom: 2px solid #2a4d2e; padding: 6px; text-align: left; background: #fff; color: #17253d;">HR</th>
+              <th style="border-bottom: 2px solid #2a4d2e; padding: 6px; text-align: left; background: #fff; color: #17253d;">Resp</th>
+              <th style="border-bottom: 2px solid #2a4d2e; padding: 6px; text-align: left; background: #fff; color: #17253d;">SpO2</th>
+              <th style="border-bottom: 2px solid #2a4d2e; padding: 6px; text-align: left; background: #fff; color: #17253d;">Temp</th>
+              <th style="border-bottom: 2px solid #2a4d2e; padding: 6px; text-align: left; background: #fff; color: #17253d;">Glucose</th>
+              <th style="border-bottom: 2px solid #2a4d2e; padding: 6px; text-align: left; background: #fff; color: #17253d;">Wt</th>
+              <th style="border-bottom: 2px solid #2a4d2e; padding: 6px; text-align: left; background: #fff; color: #17253d;">Notes</th>
+            </tr>
+          </thead>
+          <tbody id="pt-log-tbody">
+            <!-- Populated by JS -->
+          </tbody>
+        </table>
+
+        <div style="margin-bottom: 25px; font-size: 9px; text-align: justify; line-height: 1.4; color: #555; background: #fefefe; border: 1px solid #ddd; padding: 10px; border-radius: 4px;">
+          <strong>Consent Declaration:</strong> I hereby declare that the information I have provided in this form is true, complete, and correct to the best of my knowledge. I understand that any false, misleading, or incomplete information may affect my medical care, insurance processing, or company health services. I authorize the Company Clinic and its medical personnel to collect, use, and process my personal and health information for purposes of health monitoring, medical assistance, insurance documentation, and emergency response. I understand that my records will be kept confidential in accordance with the Data Privacy Act of 2012 (RA 10173) and used only for legitimate occupational health purposes.
+        </div>
+
+        <div style="background: #f4f7f6; border-left: 4px solid #2a4d2e; font-weight: bold; padding: 6px 10px; margin-bottom: 25px; color: #2a4d2e; text-transform: uppercase; font-size: 12px;">Signatures</div>
+        
+        <div style="display: flex; justify-content: space-between; margin-top: 10px;">
+          <div style="text-align: left; width: 45%;">
+            <p style="margin:0 0 35px 0; color: #555;"><strong>Patient's Signature:</strong></p>
+            <div style="border-top: 1px solid #000; padding-top: 5px; text-align: center;">
+               <span id="pt-sigName" style="font-weight: bold; text-transform: uppercase; color: #000; font-size: 12px;"></span>
+            </div>
+          </div>
+          <div style="text-align: left; width: 45%;">
+            <p style="margin:0 0 35px 0; color: #555;"><strong>Attending Nurse:</strong></p>
+            <div style="border-top: 1px solid #000; padding-top: 5px; text-align: center;">
+               <span id="pt-nurseName" style="font-weight: bold; text-transform: uppercase; color: #000; font-size: 12px;"></span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- 4. MEDICATION MANAGEMENT PORTAL -->
+    <section id="view-medications" class="view-section">
+      <div class="header-action no-print">
+        <h2 id="med-title">Medication Inventory & Issuance</h2>
+      </div>
+
+      <div class="cards-grid" style="align-items: start;">
+        
+        <!-- INVENTORY SECTION -->
+        <div class="portal-card" style="padding: 24px;">
+          <h2 style="margin-bottom: 15px; color: var(--brand-green);">Inventory Management</h2>
+          <div class="log-form-area" style="margin-bottom: 20px;">
+            <p style="font-size: 12px; margin-bottom: 8px; font-weight: bold;">Add to Stock:</p>
+            <div style="display:flex; gap:10px; margin-bottom:10px;">
+              <div style="flex:1;"><label>Medicine Name</label><input type="text" id="medName"></div>
+              <div style="width: 80px;"><label>Qty</label><input type="number" id="medQty"></div>
+            </div>
+            <div style="display:flex; gap:10px; align-items: end;">
+              <div style="flex:1;"><label>Expiry Date</label><input type="date" id="medExpiry"></div>
+              <div><button class="btn-solid" onclick="addInventory()" style="margin:0;">Add Stock</button></div>
+            </div>
+          </div>
+
+          <div class="table-container" style="box-shadow:none; border:1px solid var(--border);">
+            <table class="master-table log-table" style="width: 100%;">
+              <thead>
+                <tr>
+                  <th>Medicine Name</th>
+                  <th>Stock</th>
+                  <th>Expiry Date</th>
+                  <th>Act</th>
+                </tr>
+              </thead>
+              <tbody id="inventory-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ISSUANCE SECTION -->
+        <div class="portal-card" style="padding: 24px;">
+          <h2 style="margin-bottom: 15px; color: var(--brand-blue);">Medication Issuance Log</h2>
+          <div class="log-form-area" style="background:#e9ecf0; border-color:#c2c9d1; margin-bottom: 20px;">
+            <p style="font-size: 12px; margin-bottom: 8px; font-weight: bold; color:var(--brand-blue);">Dispense Medicine:</p>
+            <div style="display:flex; gap:10px; margin-bottom:10px;">
+              <div style="flex:1;"><label>Date</label><input type="date" id="issueDate"></div>
+              <div style="flex:1;"><label>Employee Name</label><input type="text" id="issuePatient"></div>
+            </div>
+            <div style="display:flex; gap:10px; margin-bottom:10px;">
+              <div style="flex:1;">
+                <label>Medicine (Select from stock)</label>
+                <select id="issueMedicine" style="width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 4px; font-size: 13px; background: #ffffff;"></select>
+              </div>
+              <div style="width: 80px;"><label>Qty</label><input type="number" id="issueQty"></div>
+            </div>
+            <div style="display:flex; gap:10px; align-items: end;">
+              <div style="flex:1;"><label>Reason / Symptoms</label><input type="text" id="issueReason"></div>
+              <div><button class="btn-outline" onclick="issueMedicine()" style="margin:0; background: var(--brand-blue); color:white; border:none;">Dispense</button></div>
+            </div>
+          </div>
+
+          <div class="table-container" style="box-shadow:none; border:1px solid var(--border);">
+            <table class="master-table log-table" style="width: 100%;">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Patient</th>
+                  <th>Med (Qty)</th>
+                  <th>Reason</th>
+                </tr>
+              </thead>
+              <tbody id="issuance-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+  
+  <script src="script.js"></script>
+</body>
+</html>
